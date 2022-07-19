@@ -1,0 +1,58 @@
+.d-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+
+img {
+  border-radius: 50%;
+}
+
+.name {
+  font-weight: 700;
+  font-size: 50px;
+}
+
+button {
+  font-weight: 700;
+  cursor: pointer;
+}
+
+input,
+button {
+  padding: 10px 30px;
+  background-color: rgb(182, 131, 131);
+  border: 2px solid brown;
+}
+
+input {
+  flex: 1;
+}
+
+.todo {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  cursor: pointer;
+  padding: 40px;
+  background-color: rgb(184, 129, 129);
+  margin-bottom: 20px;
+  border-radius: 20px;
+  user-select: none;
+}
+
+.todo.finished {
+  background-color: rgb(60, 148, 60);
+}
+
+.delete {
+  background-color: rgb(245, 68, 68);
+  border-color: red;
+  color: white;
+  font-weight: 300;
+}
+
+.empty {
+  text-align: center;
+}

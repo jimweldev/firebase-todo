@@ -3,7 +3,6 @@ import { signOut } from 'firebase/auth'
 import {
   collection,
   onSnapshot,
-  getDocs,
   addDoc,
   updateDoc,
   deleteDoc,
@@ -15,6 +14,7 @@ import {
 } from 'firebase/firestore'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth, db } from '../../firebaseConfig'
+import './User.css'
 
 const User = () => {
   // =============[AUTH]=============
@@ -58,9 +58,11 @@ const User = () => {
   }, [])
 
   // todo update
-  const handleTodoUpdate = async (id) => {
+  const handleTodoUpdate = async (id, status) => {
+    status = status === 'pending' ? 'finished' : 'pending'
+
     const todoDoc = doc(db, 'todos', id)
-    const newFields = { status: 'finished' }
+    const newFields = { status: status }
 
     await updateDoc(todoDoc, newFields)
   }
@@ -73,24 +75,27 @@ const User = () => {
   }
 
   return (
-    <>
-      <div>{name}</div>
-      <img src={photo} alt="" />
+    <div className="container">
+      <div className="d-flex">
+        <div className="d-flex">
+          <img src={photo} alt="" />
+          <div className="name">{name}</div>
+        </div>
 
-      <br />
+        <button
+          onClick={() => {
+            signOut(auth)
+          }}
+        >
+          Sign out
+        </button>
+      </div>
 
-      <button
-        onClick={() => {
-          signOut(auth)
-        }}
+      <form
+        className="d-flex"
+        style={{ marginTop: '40px', marginBottom: '40px' }}
+        onSubmit={handleTodoSubmit}
       >
-        Sign out
-      </button>
-
-      <br />
-      <br />
-
-      <form onSubmit={handleTodoSubmit}>
         <input
           type="text"
           onChange={(e) => {
@@ -102,22 +107,23 @@ const User = () => {
       </form>
 
       {todos.length === 0 ? (
-        <div>No Todos</div>
+        <div className="empty">No Todos (ﾒ﹏ﾒ)</div>
       ) : (
         todos.map((todo) => {
           return (
-            <div key={todo.id}>
+            <div
+              className={`todo ${todo.status == 'finished' && 'finished'}`}
+              key={todo.id}
+              onDoubleClick={() => {
+                handleTodoUpdate(todo.id, todo.status)
+              }}
+            >
               <div>
-                <div>{todo.title}</div>
-                <div>{todo.status}</div>
+                <div className="title">{todo.title}</div>
+              </div>
+              <div>
                 <button
-                  onClick={() => {
-                    handleTodoUpdate(todo.id)
-                  }}
-                >
-                  Done
-                </button>
-                <button
+                  className="delete"
                   onClick={() => {
                     handleTodoDelete(todo.id)
                   }}
@@ -125,12 +131,11 @@ const User = () => {
                   Delete
                 </button>
               </div>
-              <br />
             </div>
           )
         })
       )}
-    </>
+    </div>
   )
 }
 
