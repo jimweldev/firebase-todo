@@ -5,48 +5,77 @@ import {
   onSnapshot,
   getDocs,
   addDoc,
-  query,
-  where,
-  doc,
   updateDoc,
   deleteDoc,
+  doc,
+  serverTimestamp,
+  query,
+  where,
+  orderBy,
 } from 'firebase/firestore'
 import { useAuthState } from 'react-firebase-hooks/auth'
 import { auth, db } from '../../firebaseConfig'
 
 const User = () => {
-  // user
+  // =============[AUTH]=============
   const [user] = useAuthState(auth)
   const uid = user.uid
+  const name = user.displayName
+  const photo = user.photoURL
 
-  // todos
+  // =============[TODO]=============
   const [todos, setTodos] = useState([])
   const todosCollectionRef = collection(db, 'todos')
 
-  // update database realtime
+  // todo fields
+  const [newTitle, setNewTitle] = useState('')
+
+  // todo create
+  const handleTodoSubmit = async (e) => {
+    e.preventDefault()
+
+    await addDoc(todosCollectionRef, {
+      userId: uid,
+      title: newTitle,
+      status: 'pending',
+      createdAt: serverTimestamp(),
+    })
+
+    setNewTitle('')
+  }
+
+  // todo read realtime
   useEffect(() => {
-    const q = query(todosCollectionRef, where('userId', '==', uid))
+    const q = query(
+      todosCollectionRef,
+      where('userId', '==', uid),
+      orderBy('createdAt', 'desc')
+    )
 
     onSnapshot(q, (snapshot) =>
       setTodos(snapshot.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
     )
   }, [])
 
-  // useEffect(() => {
-  //   getTodos()
-  // }, [])
+  // todo update
+  const handleTodoUpdate = async (id) => {
+    const todoDoc = doc(db, 'todos', id)
+    const newFields = { status: 'finished' }
 
-  // const getTodos = async () => {
-  //   const q = query(todosCollectionRef, where('userId', '==', uid))
+    await updateDoc(todoDoc, newFields)
+  }
 
-  //   const data = await getDocs(q)
-  //   setTodos(data.docs.map((doc) => ({ ...doc.data(), id: doc.id })))
-  // }
+  // todo delete
+  const handleTodoDelete = async (id) => {
+    const todoDoc = doc(db, 'todos', id)
+
+    await deleteDoc(todoDoc)
+  }
 
   return (
     <>
-      <div>{user.displayName}</div>
-      <img src={user.photoURL} alt="" />
+      <div>{name}</div>
+      <img src={photo} alt="" />
 
       <br />
 
@@ -61,17 +90,16 @@ const User = () => {
       <br />
       <br />
 
-      <button
-        onClick={() => {
-          addDoc(todosCollectionRef, {
-            userId: uid,
-            title: 'New Title',
-            status: 'pending',
-          })
-        }}
-      >
-        Add Todo
-      </button>
+      <form onSubmit={handleTodoSubmit}>
+        <input
+          type="text"
+          onChange={(e) => {
+            setNewTitle(e.target.value)
+          }}
+          value={newTitle}
+        />
+        <button>Add Todo</button>
+      </form>
 
       {todos.length === 0 ? (
         <div>No Todos</div>
@@ -84,22 +112,17 @@ const User = () => {
                 <div>{todo.status}</div>
                 <button
                   onClick={() => {
-                    const todoDoc = doc(db, 'todos', todo.id)
-                    const newFields = { status: 'finished' }
-
-                    updateDoc(todoDoc, newFields)
+                    handleTodoUpdate(todo.id)
                   }}
                 >
-                  done
+                  Done
                 </button>
                 <button
                   onClick={() => {
-                    const todoDoc = doc(db, 'todos', todo.id)
-
-                    deleteDoc(todoDoc)
+                    handleTodoDelete(todo.id)
                   }}
                 >
-                  delete
+                  Delete
                 </button>
               </div>
               <br />
